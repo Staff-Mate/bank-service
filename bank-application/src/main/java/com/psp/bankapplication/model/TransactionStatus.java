@@ -2,6 +2,6 @@ package com.psp.bankapplication.model;
 
 public enum TransactionStatus {
     SUCCESS,
-    FAIL,
+    FAILED,
     ERROR
 }

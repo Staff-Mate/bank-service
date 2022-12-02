@@ -24,4 +24,47 @@ public abstract class UserAccount {
 
     @Column
     private Double availableAssets;
+
+    public UserAccount() {
+    }
+
+    public UUID getId() {
+        return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getSurname() {
+        return surname;
+    }
+
+    public Double getReservedAssets() {
+        return reservedAssets;
+    }
+
+    public Double getAvailableAssets() {
+        return availableAssets;
+    }
+
+    public void setId(UUID id) {
+        this.id = id;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setSurname(String surname) {
+        this.surname = surname;
+    }
+
+    public void setReservedAssets(Double reservedAssets) {
+        this.reservedAssets = reservedAssets;
+    }
+
+    public void setAvailableAssets(Double availableAssets) {
+        this.availableAssets = availableAssets;
+    }
 }

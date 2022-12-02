@@ -19,21 +19,13 @@ public class Transaction {
     private UUID id;
 
     @Column
-    private String merchantId;
-
-    @Column
-    private Double amount;
-
-    @Column
-    private String merchantOrderId;
-
-    @Column
-    private Timestamp merchantTimestamp;
-
-    @Column
     private String pan;
 
     @Enumerated(EnumType.STRING)
     private TransactionStatus transactionStatus;
+
+    @OneToOne(orphanRemoval = true)
+    @JoinColumn(name = "payment_request_id")
+    private PaymentRequest paymentRequest;
 }
 

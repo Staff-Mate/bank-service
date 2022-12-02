@@ -9,4 +9,6 @@ import java.util.UUID;
 
 @Repository
 public interface MerchantAccountRepository extends UserAccountRepository {
+
+    MerchantAccount findByMerchantId(String merchantId);
 }
