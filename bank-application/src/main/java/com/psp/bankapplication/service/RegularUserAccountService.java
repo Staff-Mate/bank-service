@@ -25,7 +25,7 @@ public class RegularUserAccountService {
 
     public ResponseEntity<?> processPayment(BankCardDto bankCardDto) {
         //TODO: check PAN number (PCC)
-        RegularUserAccount regularUserAccount = regularUserAccountRepository.findByPan(bankCardDto.getPan()); //TODO: with hash
+        RegularUserAccount regularUserAccount = regularUserAccountRepository.findByBankCard_Pan(bankCardDto.getPan()); //TODO: with hash
         if(regularUserAccount == null){
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }

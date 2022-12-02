@@ -9,5 +9,5 @@ import java.util.UUID;
 
 @Repository
 public interface RegularUserAccountRepository extends UserAccountRepository {
-    RegularUserAccount findByPan(String pan);
+    RegularUserAccount findByBankCard_Pan(String pan);
 }
