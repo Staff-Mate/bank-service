@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.servlet.view.RedirectView;
 
 @Service
 public class PaymentService {
@@ -22,13 +23,13 @@ public class PaymentService {
     @Autowired
     private PaymentRequestService paymentRequestService;
 
-    public ResponseEntity<?> acceptPaymentRequest(PaymentRequestDto paymentRequestDto){
-        if(accountService.doesMerchantExist(paymentRequestDto.getMerchantId(), paymentRequestDto.getMerchantId())){
+    public RedirectView acceptPaymentRequest(PaymentRequestDto paymentRequestDto){
+        if(accountService.doesMerchantExist(paymentRequestDto.getMerchantId(), paymentRequestDto.getMerchantPassword())){
             PaymentRequest paymentRequest = modelMapper.map(paymentRequestDto, PaymentRequest.class);
             paymentRequest.setPaymentId(String.format("%.0f", (Math.floor(Math.random() * 9_000_000_000L) + 1_000_000_000L)));
             paymentRequestService.save(paymentRequest);
-            return new ResponseEntity<>(HttpStatus.CREATED);
+            return new RedirectView("http://localhost:4200/payment/" + paymentRequest.getPaymentId() );
         }
-        return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        return new RedirectView(paymentRequestDto.getErrorUrl());
     }
 }

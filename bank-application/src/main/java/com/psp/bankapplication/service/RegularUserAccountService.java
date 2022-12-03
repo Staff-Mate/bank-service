@@ -8,8 +8,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.servlet.view.RedirectView;
 
 import java.util.Date;
+import java.util.Objects;
 
 @Service
 public class RegularUserAccountService {
@@ -23,11 +26,17 @@ public class RegularUserAccountService {
     @Autowired
     private TransactionService transactionService;
 
-    public ResponseEntity<?> processPayment(BankCardDto bankCardDto) {
+    @Autowired
+    private RestTemplate restTemplate;
+
+    private final String RECEIVE_PAYMENT_RESPONSE_URL = "http://localhost:9000/bank-card-service/payments/";
+    private final String BANK_ERROR_URL = "http://localhost:8080/payment/error";
+
+    public RedirectView processPayment(BankCardDto bankCardDto) {
         //TODO: check PAN number (PCC)
         RegularUserAccount regularUserAccount = regularUserAccountRepository.findByBankCard_Pan(bankCardDto.getPan()); //TODO: with hash
         if(regularUserAccount == null){
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            return new RedirectView(BANK_ERROR_URL);
         }
 
         PaymentRequest paymentRequest = paymentRequestService.getPaymentRequestByPaymentId(bankCardDto.getPaymentId());
@@ -38,15 +47,17 @@ public class RegularUserAccountService {
                 TransactionStatus transactionStatus = isUpdated ? TransactionStatus.SUCCESS : TransactionStatus.FAILED;
                 transactionService.saveTransaction(bankCardDto, paymentRequest, transactionStatus);
                 PaymentResponseDto paymentResponseDto = new PaymentResponseDto(paymentRequest, transactionStatus);
-                return new ResponseEntity<>(paymentResponseDto, HttpStatus.OK);
+                ResponseEntity<String> responseUrl = restTemplate.postForEntity(RECEIVE_PAYMENT_RESPONSE_URL, paymentResponseDto, String.class);
+                return new RedirectView(Objects.requireNonNull(responseUrl.getBody()));
             }else{
                 TransactionStatus transactionStatus = TransactionStatus.ERROR;
                 transactionService.saveTransaction(bankCardDto, paymentRequest, transactionStatus);
                 PaymentResponseDto paymentResponseDto = new PaymentResponseDto(paymentRequest, transactionStatus);
-                return new ResponseEntity<>(paymentResponseDto, HttpStatus.BAD_REQUEST);
+                ResponseEntity<String> responseUrl = restTemplate.postForEntity(RECEIVE_PAYMENT_RESPONSE_URL, paymentResponseDto, String.class);
+                return new RedirectView(Objects.requireNonNull(responseUrl.getBody()));
             }
         }else {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            return new RedirectView(BANK_ERROR_URL);
         }
     }
 
