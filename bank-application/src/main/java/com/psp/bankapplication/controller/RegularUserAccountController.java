@@ -19,7 +19,7 @@ public class RegularUserAccountController {
     @Autowired
     private RegularUserAccountService regularUserAccountService;
 
-    @PostMapping("")
+    @PostMapping("/")
     public ResponseEntity<?> processPayment(@RequestBody BankCardDto bankCardDto){
         return regularUserAccountService.processPayment(bankCardDto);
     }

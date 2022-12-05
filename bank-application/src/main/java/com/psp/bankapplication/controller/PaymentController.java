@@ -3,6 +3,7 @@ package com.psp.bankapplication.controller;
 import com.psp.bankapplication.dto.PaymentRequestDto;
 import com.psp.bankapplication.service.PaymentService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,7 +18,7 @@ public class PaymentController {
     private PaymentService paymentService;
 
     @PostMapping("/")
-    public RedirectView acceptPaymentRequest(@RequestBody PaymentRequestDto paymentRequestDto){
+    public ResponseEntity<?> acceptPaymentRequest(@RequestBody PaymentRequestDto paymentRequestDto){
         return paymentService.acceptPaymentRequest(paymentRequestDto);
     }
 
