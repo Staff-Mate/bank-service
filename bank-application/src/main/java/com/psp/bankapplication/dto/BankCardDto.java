@@ -12,11 +12,10 @@ import java.util.Date;
 @NoArgsConstructor
 public class BankCardDto {
 
-
     private String cardHolderName;
     private String pan;
     private String securityCode;
-    private Date expirationDate;
-
+    private String expirationMonth;
+    private String expirationYear;
     private String paymentId;
 }

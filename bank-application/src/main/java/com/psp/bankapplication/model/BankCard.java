@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.Date;
 import java.util.UUID;
@@ -29,5 +30,5 @@ public class BankCard {
     private String securityCode;
 
     @Column
-    private Date expirationDate;
+    private LocalDate expirationDate;
 }
