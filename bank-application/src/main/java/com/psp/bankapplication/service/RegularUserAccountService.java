@@ -1,10 +1,8 @@
 package com.psp.bankapplication.service;
 
-import com.psp.bankapplication.dto.BankCardDto;
-import com.psp.bankapplication.dto.PaymentRequestDto;
-import com.psp.bankapplication.dto.PaymentResponseDto;
-import com.psp.bankapplication.dto.PccRequestDto;
+import com.psp.bankapplication.dto.*;
 import com.psp.bankapplication.model.*;
+import com.psp.bankapplication.repository.PccResponseRepository;
 import com.psp.bankapplication.repository.RegularUserAccountRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
@@ -36,6 +34,9 @@ public class RegularUserAccountService {
     private PaymentResponseService paymentResponseService;
 
     @Autowired
+    private PccResponseService pccResponseService;
+
+    @Autowired
     private RestTemplate restTemplate;
 
     @Autowired
@@ -44,6 +45,7 @@ public class RegularUserAccountService {
     private final String RECEIVE_PAYMENT_RESPONSE_URL = "http://localhost:9000/bank-card-service/payments/";
     private final String BANK_ERROR_URL = "http://localhost:8080/payment/error";
 
+
     public ResponseEntity<?> processPayment(BankCardDto bankCardDto) {
         PaymentRequest paymentRequest = paymentRequestService.getPaymentRequestByPaymentId(bankCardDto.getPaymentId());
         if (paymentRequest == null) {
@@ -51,33 +53,7 @@ public class RegularUserAccountService {
             return new ResponseEntity<>(BANK_ERROR_URL, HttpStatus.BAD_REQUEST);
         } else {
             if (bankCardDto.getPan().substring(0, 6).equals(bankService.getBankCode())) {
-                RegularUserAccount regularUserAccount = regularUserAccountRepository.findByBankCard_Pan(bankCardDto.getPan()); //TODO: with hash
-                if (regularUserAccount == null) {
-                    log.error("Regular user account does not exist. Invalid bank card pan");
-                    return new ResponseEntity<>(BANK_ERROR_URL, HttpStatus.BAD_REQUEST);
-                }
-
-                PaymentResponse paymentResponse = new PaymentResponse(paymentRequest);
-                paymentResponseService.save(paymentResponse);
-                if (verifyCardInformation(regularUserAccount.getBankCard(), bankCardDto)) {
-                    boolean isUpdated = updateRegularUserAssets(regularUserAccount, paymentRequest);
-                    TransactionStatus transactionStatus = isUpdated ? TransactionStatus.SUCCESS : TransactionStatus.FAILED;
-                    transactionService.saveTransaction(bankCardDto, paymentRequest, transactionStatus);     // TODO: encrypt or has pan number before saving
-
-
-                    PaymentResponseDto paymentResponseDto = new PaymentResponseDto(paymentResponse, transactionStatus);
-                    ResponseEntity<String> responseUrl = restTemplate.postForEntity(RECEIVE_PAYMENT_RESPONSE_URL, paymentResponseDto, String.class);
-                    log.debug("Payment successfully processed. Resulting url given as a response from bank card service: {}", responseUrl);
-
-                    return new ResponseEntity<>(responseUrl, HttpStatus.CREATED);
-                } else {
-                    TransactionStatus transactionStatus = TransactionStatus.ERROR;
-                    transactionService.saveTransaction(bankCardDto, paymentRequest, transactionStatus);
-                    PaymentResponseDto paymentResponseDto = new PaymentResponseDto(paymentResponse, transactionStatus);
-                    ResponseEntity<String> responseUrl = restTemplate.postForEntity(RECEIVE_PAYMENT_RESPONSE_URL, paymentResponseDto, String.class);
-                    log.debug("Error during payment process. Invalid bank card information for user with id: {}", regularUserAccount.getId());
-                    return new ResponseEntity<>(responseUrl, HttpStatus.BAD_REQUEST);
-                }
+                return reserveUserAssets(bankCardDto, paymentRequest);
             } else {
                 PaymentRequestDto paymentRequestDto = modelMapper.map(paymentRequest, PaymentRequestDto.class);
                 PccRequestDto pccRequestDto = new PccRequestDto(paymentRequestDto, bankCardDto);
@@ -86,6 +62,63 @@ public class RegularUserAccountService {
                 //ResponseEntity<String> responseUrl = restTemplate.postForEntity("pcc_url", pccRequestDto, String.class);
                 return null; // TODO: finish implementation
             }
+        }
+    }
+
+    public ResponseEntity<?> processPCCPayment(PccRequestDto pccRequestDto) {
+        PaymentRequest paymentRequest = modelMapper.map(pccRequestDto.getPaymentRequest(), PaymentRequest.class);
+        RegularUserAccount regularUserAccount = regularUserAccountRepository.findByBankCard_Pan(pccRequestDto.getCardInfo().getPan()); //TODO: with hash
+        if (regularUserAccount == null) {
+            log.error("Regular user account does not exist. Invalid bank card pan");
+            return new ResponseEntity<>(BANK_ERROR_URL, HttpStatus.BAD_REQUEST);
+        }
+
+        PccResponse pccResponse = new PccResponse(pccRequestDto, modelMapper.map(pccRequestDto.getPaymentRequest(), PaymentRequest.class));
+        pccResponseService.save(pccResponse);
+        PccResponseDto pccResponseDto = new PccResponseDto(pccResponse);
+        if (verifyCardInformation(regularUserAccount.getBankCard(), pccRequestDto.getCardInfo())) {
+            boolean isUpdated = updateRegularUserAssets(regularUserAccount, paymentRequest);
+            TransactionStatus transactionStatus = isUpdated ? TransactionStatus.SUCCESS : TransactionStatus.FAILED;
+            transactionService.saveTransaction(pccRequestDto.getCardInfo(), paymentRequest, transactionStatus);     // TODO: encrypt or has pan number before saving
+
+            pccResponseDto.setTransactionStatus(transactionStatus.toString());
+            return new ResponseEntity<>(pccResponseDto, HttpStatus.OK);
+        } else {
+            TransactionStatus transactionStatus = TransactionStatus.ERROR;
+            transactionService.saveTransaction(pccRequestDto.getCardInfo(), paymentRequest, transactionStatus);
+            pccResponseDto.setTransactionStatus(transactionStatus.toString());
+
+            return new ResponseEntity<>(pccResponseDto, HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    private ResponseEntity<?> reserveUserAssets(BankCardDto bankCardDto, PaymentRequest paymentRequest) {
+        RegularUserAccount regularUserAccount = regularUserAccountRepository.findByBankCard_Pan(bankCardDto.getPan()); //TODO: with hash
+        if (regularUserAccount == null) {
+            log.error("Regular user account does not exist. Invalid bank card pan");
+            return new ResponseEntity<>(BANK_ERROR_URL, HttpStatus.BAD_REQUEST);
+        }
+
+        PaymentResponse paymentResponse = new PaymentResponse(paymentRequest);
+        paymentResponseService.save(paymentResponse);
+        if (verifyCardInformation(regularUserAccount.getBankCard(), bankCardDto)) {
+            boolean isUpdated = updateRegularUserAssets(regularUserAccount, paymentRequest);
+            TransactionStatus transactionStatus = isUpdated ? TransactionStatus.SUCCESS : TransactionStatus.FAILED;
+            transactionService.saveTransaction(bankCardDto, paymentRequest, transactionStatus);     // TODO: encrypt or has pan number before saving
+
+
+            PaymentResponseDto paymentResponseDto = new PaymentResponseDto(paymentResponse, transactionStatus);
+            ResponseEntity<String> responseUrl = restTemplate.postForEntity(RECEIVE_PAYMENT_RESPONSE_URL, paymentResponseDto, String.class);
+            log.debug("Payment successfully processed. Resulting url given as a response from bank card service: {}", responseUrl);
+
+            return new ResponseEntity<>(responseUrl, HttpStatus.CREATED);
+        } else {
+            TransactionStatus transactionStatus = TransactionStatus.ERROR;
+            transactionService.saveTransaction(bankCardDto, paymentRequest, transactionStatus);
+            PaymentResponseDto paymentResponseDto = new PaymentResponseDto(paymentResponse, transactionStatus);
+            ResponseEntity<String> responseUrl = restTemplate.postForEntity(RECEIVE_PAYMENT_RESPONSE_URL, paymentResponseDto, String.class);
+            log.debug("Error during payment process. Invalid bank card information for user with id: {}", regularUserAccount.getId());
+            return new ResponseEntity<>(responseUrl, HttpStatus.BAD_REQUEST);
         }
     }
 

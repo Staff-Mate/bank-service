@@ -1,5 +1,8 @@
 package com.psp.bankapplication.model;
 
+import com.psp.bankapplication.dto.PccRequestDto;
+import com.psp.bankapplication.dto.PccResponseDto;
+import com.psp.bankapplication.util.Utils;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -31,10 +34,16 @@ public class PccResponse {
     @Column
     private Timestamp issuerTimestamp;
 
-
     @OneToOne(orphanRemoval = true)
     @JoinColumn(name = "payment_request_id")
     private PaymentRequest paymentRequest;
 
+    public PccResponse(PccRequestDto pccRequestDto, PaymentRequest paymentRequest){
+        this.acquirerOrderId = pccRequestDto.getAcquirerOrderId();
+        this.acquirerTimestamp = pccRequestDto.getAcquirerTimestamp();
+        this.issuerTimestamp = new Timestamp(System.currentTimeMillis());;
+        this.issuerOrderId = Utils.generateId();
+        this.paymentRequest = paymentRequest;
+    }
 
 }

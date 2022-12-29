@@ -1,6 +1,7 @@
 package com.psp.bankapplication.controller;
 
 import com.psp.bankapplication.dto.BankCardDto;
+import com.psp.bankapplication.dto.PccRequestDto;
 import com.psp.bankapplication.service.RegularUserAccountService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,4 +26,10 @@ public class RegularUserAccountController {
         return regularUserAccountService.processPayment(bankCardDto);
     }
 
+    @PostMapping("/pcc")
+    public ResponseEntity<?> processPCCPayment(@RequestBody PccRequestDto pccRequestDto) {
+        log.debug("POST request received - /accounts/pcc. Card holder name: {}, payment id: {}",
+                pccRequestDto.getCardInfo().getCardHolderName(), pccRequestDto.getCardInfo().getPaymentId());
+        return regularUserAccountService.processPCCPayment(pccRequestDto);
+    }
 }

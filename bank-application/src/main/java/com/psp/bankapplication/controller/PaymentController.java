@@ -1,6 +1,7 @@
 package com.psp.bankapplication.controller;
 
 import com.psp.bankapplication.dto.PaymentRequestDto;
+import com.psp.bankapplication.dto.PccRequestDto;
 import com.psp.bankapplication.service.PaymentService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
