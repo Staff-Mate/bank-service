@@ -1,4 +1,4 @@
-package com.psp.bankapplication.model;
+package com.pcc.model;
 
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -12,6 +12,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @Entity
 public class Bank {
+
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)

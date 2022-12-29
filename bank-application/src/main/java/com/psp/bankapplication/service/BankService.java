@@ -13,4 +13,8 @@ public class BankService {
     public String getBankCode() {
         return bankRepository.getBankByBankName("UniCredit Bank").getBankCode();
     }
+
+    public String getBankUrl() {
+        return bankRepository.getBankByBankName("UniCredit Bank").getUrl();
+    }
 }

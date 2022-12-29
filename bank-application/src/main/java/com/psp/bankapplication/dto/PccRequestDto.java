@@ -18,6 +18,7 @@ public class PccRequestDto {
     private PaymentRequestDto paymentRequest;
     private String acquirerOrderId;
     private Timestamp acquirerTimestamp;
+    private String merchantBankUrl;
 
 
     public PccRequestDto(PaymentRequestDto paymentRequestDto, BankCardDto bankCardDto) {

@@ -81,6 +81,7 @@ public class RegularUserAccountService {
             } else {
                 PaymentRequestDto paymentRequestDto = modelMapper.map(paymentRequest, PaymentRequestDto.class);
                 PccRequestDto pccRequestDto = new PccRequestDto(paymentRequestDto, bankCardDto);
+                pccRequestDto.setMerchantBankUrl(bankService.getBankUrl());
                 log.debug("Payment redirected to pcc. Payment id: {}", paymentRequest.getPaymentId());
                 //ResponseEntity<String> responseUrl = restTemplate.postForEntity("pcc_url", pccRequestDto, String.class);
                 return null; // TODO: finish implementation
