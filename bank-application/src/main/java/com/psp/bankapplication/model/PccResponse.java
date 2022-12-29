@@ -5,26 +5,36 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.sql.Timestamp;
 import java.util.UUID;
 
-@Entity
 @Getter
 @Setter
 @NoArgsConstructor
-public class Transaction {
+@Entity
+public class PccResponse {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
+    @Column(name = "id", nullable = false)
     private UUID id;
 
     @Column
-    private String pan;
+    private String acquirerOrderId;
 
-    @Enumerated(EnumType.STRING)
-    private TransactionStatus transactionStatus;
+    @Column
+    private Timestamp acquirerTimestamp;
+
+    @Column
+    private String issuerOrderId;
+
+    @Column
+    private Timestamp issuerTimestamp;
+
 
     @OneToOne(orphanRemoval = true)
     @JoinColumn(name = "payment_request_id")
     private PaymentRequest paymentRequest;
-}
 
+
+}

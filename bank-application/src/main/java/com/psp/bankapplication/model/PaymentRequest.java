@@ -1,7 +1,6 @@
 package com.psp.bankapplication.model;
 
 import jakarta.persistence.*;
-import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -10,7 +9,8 @@ import java.sql.Timestamp;
 import java.util.UUID;
 
 @Getter
-@Setter@NoArgsConstructor
+@Setter
+@NoArgsConstructor
 @Entity
 public class PaymentRequest {
 

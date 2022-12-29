@@ -17,9 +17,9 @@ public class AccountService {
     @Autowired
     private RegularUserAccountRepository regularUserAccountRepository;
 
-    public Boolean doesMerchantExist(String merchantId, String merchantPassword){
+    public Boolean doesMerchantExist(String merchantId, String merchantPassword) {
         MerchantAccount merchantAccount = merchantAccountRepository.findByMerchantId(merchantId);
-        if (merchantAccount == null){
+        if (merchantAccount == null) {
             log.warn("Merchant with id: {} does not exist!", merchantId);
             return false;
         }

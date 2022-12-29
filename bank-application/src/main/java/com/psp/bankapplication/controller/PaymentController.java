@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.servlet.view.RedirectView;
 
 @RestController
 @RequestMapping("/payments")
@@ -20,7 +19,7 @@ public class PaymentController {
     private PaymentService paymentService;
 
     @PostMapping("/")
-    public ResponseEntity<?> acceptPaymentRequest(@RequestBody PaymentRequestDto paymentRequestDto){
+    public ResponseEntity<?> acceptPaymentRequest(@RequestBody PaymentRequestDto paymentRequestDto) {
         log.debug("POST request received - /payments/. Merchant id: {}, merchant order id: {}, amount: {}",
                 paymentRequestDto.getMerchantId(), paymentRequestDto.getMerchantOrderId(), paymentRequestDto.getAmount());
         return paymentService.acceptPaymentRequest(paymentRequestDto);

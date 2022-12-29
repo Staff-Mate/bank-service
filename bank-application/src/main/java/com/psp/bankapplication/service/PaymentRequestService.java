@@ -16,7 +16,7 @@ public class PaymentRequestService {
         paymentRequestRepository.save(paymentRequest);
     }
 
-    public PaymentRequest getPaymentRequestByPaymentId(String paymentId){
+    public PaymentRequest getPaymentRequestByPaymentId(String paymentId) {
         return paymentRequestRepository.findByPaymentId(paymentId);
     }
 
