@@ -15,4 +15,8 @@ public class BankService {
         return bankRepository.getBankByBankCode(bankCode);
     }
 
+    public Bank getBankByBankUrl(String url) {
+        return bankRepository.getBankByUrl(url);
+    }
+
 }

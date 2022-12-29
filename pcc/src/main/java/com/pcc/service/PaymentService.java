@@ -1,7 +1,9 @@
 package com.pcc.service;
 
+import com.pcc.dto.BankResponseDto;
 import com.pcc.dto.PccRequestDto;
 import com.pcc.model.Bank;
+import com.pcc.model.Transaction;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +17,9 @@ public class PaymentService {
     private BankService bankService;
 
     @Autowired
+    private TransactionService transactionService;
+
+    @Autowired
     private RestTemplate restTemplate;
 
     public ResponseEntity<?> processPayment(PccRequestDto pccRequestDto) {
@@ -22,10 +27,15 @@ public class PaymentService {
         if (bank == null) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         } else {
-            // ResponseEntity<String> responseUrl = restTemplate.postForEntity(bank.getUrl() + "", paymentResponseDto, String.class);
-            // ResponseEntity<String> responseUrl2 = restTemplate.postForEntity(bank.getUrl() + "", paymentResponseDto, String.class);
+            Transaction transaction = transactionService.save(bank, pccRequestDto);
+            ResponseEntity<BankResponseDto> bankResponseDtoResponseEntity = restTemplate.postForEntity(bank.getUrl() + "", pccRequestDto, BankResponseDto.class);
+            BankResponseDto bankResponseDto = bankResponseDtoResponseEntity.getBody();
+            if(bankResponseDto == null){
+                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            }
+            transactionService.update(transaction, bankResponseDto);
+            restTemplate.postForEntity(pccRequestDto.getMerchantBankUrl(), bankResponseDto, String.class);
             return new ResponseEntity<>(HttpStatus.OK);
-
         }
     }
 }
