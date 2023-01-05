@@ -45,6 +45,8 @@ public class RegularUserAccountService {
     private final String RECEIVE_PAYMENT_RESPONSE_URL = "http://localhost:9000/bank-card-service/payments/";
     private final String BANK_ERROR_URL = "http://localhost:8080/payment/error";
 
+    private final String PCC_URL = "http://localhost:8090/payments/";
+
 
     public ResponseEntity<?> processPayment(BankCardDto bankCardDto) {
         PaymentRequest paymentRequest = paymentRequestService.getPaymentRequestByPaymentId(bankCardDto.getPaymentId());
@@ -59,8 +61,27 @@ public class RegularUserAccountService {
                 PccRequestDto pccRequestDto = new PccRequestDto(paymentRequestDto, bankCardDto);
                 pccRequestDto.setMerchantBankUrl(bankService.getBankUrl());
                 log.debug("Payment redirected to pcc. Payment id: {}", paymentRequest.getPaymentId());
-                //ResponseEntity<String> responseUrl = restTemplate.postForEntity("pcc_url", pccRequestDto, String.class);
-                return null; // TODO: finish implementation
+                ResponseEntity<PccResponseDto> response = restTemplate.postForEntity(PCC_URL, pccRequestDto, PccResponseDto.class);
+                PccResponseDto pccResponseDto = response.getBody();
+
+                if(pccResponseDto == null){
+                    transactionService.saveTransaction(bankCardDto, paymentRequest, TransactionStatus.ERROR);
+                    return new ResponseEntity<>(paymentRequest.getErrorUrl(), HttpStatus.OK);
+                }else{
+                    TransactionStatus transactionStatus = TransactionStatus.valueOf(pccResponseDto.getTransactionStatus());
+                    transactionService.saveTransaction(bankCardDto, paymentRequest, transactionStatus);
+
+                    String url = "";
+                    if(transactionStatus == TransactionStatus.SUCCESS){
+                        url = paymentRequest.getSuccessUrl();
+                    }else if(transactionStatus == TransactionStatus.FAILED){
+                        url = paymentRequest.getFailedUrl();
+                    }else{
+                        url = paymentRequest.getErrorUrl();
+                    }
+
+                    return new ResponseEntity<>(url, HttpStatus.OK);
+                }
             }
         }
     }

@@ -20,7 +20,7 @@ public class PaymentRequest {
     private UUID id;
 
     @Column
-    private String paymentId; //TODO: ?
+    private String paymentId;
 
     @Column
     private String merchantId;

@@ -28,14 +28,14 @@ public class PaymentService {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         } else {
             Transaction transaction = transactionService.save(bank, pccRequestDto);
-            ResponseEntity<BankResponseDto> bankResponseDtoResponseEntity = restTemplate.postForEntity(bank.getUrl() + "", pccRequestDto, BankResponseDto.class);
+            ResponseEntity<BankResponseDto> bankResponseDtoResponseEntity = restTemplate.postForEntity(bank.getUrl() + "/accounts/pcc", pccRequestDto, BankResponseDto.class);
             BankResponseDto bankResponseDto = bankResponseDtoResponseEntity.getBody();
             if(bankResponseDto == null){
                 return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
             }
             transactionService.update(transaction, bankResponseDto);
-            restTemplate.postForEntity(pccRequestDto.getMerchantBankUrl(), bankResponseDto, String.class);
-            return new ResponseEntity<>(HttpStatus.OK);
+//            restTemplate.postForEntity(pccRequestDto.getMerchantBankUrl(), bankResponseDto, BankResponseDto.class);
+            return new ResponseEntity<>(bankResponseDto, HttpStatus.OK);
         }
     }
 }

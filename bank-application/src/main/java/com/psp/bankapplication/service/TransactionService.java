@@ -18,7 +18,7 @@ public class TransactionService {
 
     public void saveTransaction(BankCardDto bankCardDto, PaymentRequest paymentRequest, TransactionStatus transactionStatus) {
         Transaction transaction = new Transaction();
-        transaction.setPan(bankCardDto.getPan());
+        transaction.setPan("***" + bankCardDto.getPan().substring(bankCardDto.getPan().length() - 2));
         transaction.setTransactionStatus(transactionStatus);
         transaction.setPaymentRequest(paymentRequest);
         transactionRepository.save(transaction);
