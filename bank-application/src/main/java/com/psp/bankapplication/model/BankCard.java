@@ -21,7 +21,7 @@ public class BankCard {
     @Column
     private String cardHolderName;
 
-    @Column(length = 16)
+    @Column
     private String pan;
 
     @Column

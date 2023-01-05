@@ -31,7 +31,7 @@
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/bank-application" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../payment-service-provider-back/api-gateway" />
     <property name="settings.editor.selected.configurable" value="MavenSettings" />
   </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
@@ -45,6 +45,7 @@
       <workItem from="1670191902803" duration="636000" />
       <workItem from="1672328672164" duration="877000" />
       <workItem from="1672330066870" duration="146000" />
+      <workItem from="1672919452957" duration="56000" />
     </task>
     <servers />
   </component>

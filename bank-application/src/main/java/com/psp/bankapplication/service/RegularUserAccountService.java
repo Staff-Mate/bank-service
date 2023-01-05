@@ -9,6 +9,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -37,6 +38,9 @@ public class RegularUserAccountService {
     private PccResponseService pccResponseService;
 
     @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
     private RestTemplate restTemplate;
 
     @Autowired
@@ -63,9 +67,15 @@ public class RegularUserAccountService {
                 log.debug("Payment redirected to pcc. Payment id: {}", paymentRequest.getPaymentId());
                 ResponseEntity<PccResponseDto> response = restTemplate.postForEntity(PCC_URL, pccRequestDto, PccResponseDto.class);
                 PccResponseDto pccResponseDto = response.getBody();
+                pccResponseService.save(modelMapper.map(pccResponseDto, PccResponse.class));
 
+                PaymentResponse paymentResponse = new PaymentResponse(paymentRequest);
+                paymentResponseService.save(paymentResponse);
                 if(pccResponseDto == null){
                     transactionService.saveTransaction(bankCardDto, paymentRequest, TransactionStatus.ERROR);
+                    PaymentResponseDto paymentResponseDto = new PaymentResponseDto(paymentResponse, TransactionStatus.ERROR);
+
+                    restTemplate.postForEntity(RECEIVE_PAYMENT_RESPONSE_URL, paymentResponseDto, String.class);
                     return new ResponseEntity<>(paymentRequest.getErrorUrl(), HttpStatus.OK);
                 }else{
                     TransactionStatus transactionStatus = TransactionStatus.valueOf(pccResponseDto.getTransactionStatus());
@@ -80,6 +90,9 @@ public class RegularUserAccountService {
                         url = paymentRequest.getErrorUrl();
                     }
 
+                    PaymentResponseDto paymentResponseDto = new PaymentResponseDto(paymentResponse, transactionStatus);
+                    restTemplate.postForEntity(RECEIVE_PAYMENT_RESPONSE_URL, paymentResponseDto, String.class);
+
                     return new ResponseEntity<>(url, HttpStatus.OK);
                 }
             }
@@ -88,7 +101,7 @@ public class RegularUserAccountService {
 
     public ResponseEntity<?> processPCCPayment(PccRequestDto pccRequestDto) {
         PaymentRequest paymentRequest = modelMapper.map(pccRequestDto.getPaymentRequest(), PaymentRequest.class);
-        RegularUserAccount regularUserAccount = regularUserAccountRepository.findByBankCard_Pan(pccRequestDto.getCardInfo().getPan()); //TODO: with hash
+        RegularUserAccount regularUserAccount = findRegularUserAccountByPan(pccRequestDto.getCardInfo().getPan());
         if (regularUserAccount == null) {
             log.error("Regular user account does not exist. Invalid bank card pan");
             return new ResponseEntity<>(BANK_ERROR_URL, HttpStatus.BAD_REQUEST);
@@ -101,21 +114,19 @@ public class RegularUserAccountService {
         if (verifyCardInformation(regularUserAccount.getBankCard(), pccRequestDto.getCardInfo())) {
             boolean isUpdated = updateRegularUserAssets(regularUserAccount, paymentRequest);
             TransactionStatus transactionStatus = isUpdated ? TransactionStatus.SUCCESS : TransactionStatus.FAILED;
-            transactionService.saveTransaction(pccRequestDto.getCardInfo(), paymentRequest, transactionStatus);     // TODO: encrypt or has pan number before saving
-
+            transactionService.saveTransaction(pccRequestDto.getCardInfo(), paymentRequest, transactionStatus);
             pccResponseDto.setTransactionStatus(transactionStatus.toString());
             return new ResponseEntity<>(pccResponseDto, HttpStatus.OK);
         } else {
             TransactionStatus transactionStatus = TransactionStatus.ERROR;
             transactionService.saveTransaction(pccRequestDto.getCardInfo(), paymentRequest, transactionStatus);
             pccResponseDto.setTransactionStatus(transactionStatus.toString());
-
             return new ResponseEntity<>(pccResponseDto, HttpStatus.BAD_REQUEST);
         }
     }
 
     private ResponseEntity<?> reserveUserAssets(BankCardDto bankCardDto, PaymentRequest paymentRequest) {
-        RegularUserAccount regularUserAccount = regularUserAccountRepository.findByBankCard_Pan(bankCardDto.getPan()); //TODO: with hash
+        RegularUserAccount regularUserAccount = findRegularUserAccountByPan(bankCardDto.getPan());
         if (regularUserAccount == null) {
             log.error("Regular user account does not exist. Invalid bank card pan");
             return new ResponseEntity<>(BANK_ERROR_URL, HttpStatus.BAD_REQUEST);
@@ -126,7 +137,7 @@ public class RegularUserAccountService {
         if (verifyCardInformation(regularUserAccount.getBankCard(), bankCardDto)) {
             boolean isUpdated = updateRegularUserAssets(regularUserAccount, paymentRequest);
             TransactionStatus transactionStatus = isUpdated ? TransactionStatus.SUCCESS : TransactionStatus.FAILED;
-            transactionService.saveTransaction(bankCardDto, paymentRequest, transactionStatus);     // TODO: encrypt or has pan number before saving
+            transactionService.saveTransaction(bankCardDto, paymentRequest, transactionStatus);
 
 
             PaymentResponseDto paymentResponseDto = new PaymentResponseDto(paymentResponse, transactionStatus);
@@ -160,9 +171,18 @@ public class RegularUserAccountService {
     private boolean verifyCardInformation(BankCard bankCard, BankCardDto bankCardDto) {
         LocalDate expirationDateDto = LocalDate.of(Integer.parseInt(bankCardDto.getExpirationYear()), Integer.parseInt(bankCardDto.getExpirationMonth()), 1);
         return bankCard.getCardHolderName().equals(bankCardDto.getCardHolderName()) &&
-                bankCard.getSecurityCode().equals(bankCardDto.getSecurityCode()) &&
+                passwordEncoder.matches(bankCardDto.getSecurityCode(), bankCard.getSecurityCode()) &&
                 bankCard.getExpirationDate().equals(expirationDateDto) &&
                 bankCard.getExpirationDate().isAfter(LocalDate.now());
+    }
+
+    private RegularUserAccount findRegularUserAccountByPan(String pan) {
+        for (RegularUserAccount userAccount : regularUserAccountRepository.getAll()) {
+            if (passwordEncoder.matches(pan, userAccount.getBankCard().getPan())) {
+                return userAccount;
+            }
+        }
+        return null;
     }
 
 }
