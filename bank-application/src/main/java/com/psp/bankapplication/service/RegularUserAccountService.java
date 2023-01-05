@@ -94,7 +94,8 @@ public class RegularUserAccountService {
             return new ResponseEntity<>(BANK_ERROR_URL, HttpStatus.BAD_REQUEST);
         }
 
-        PccResponse pccResponse = new PccResponse(pccRequestDto, modelMapper.map(pccRequestDto.getPaymentRequest(), PaymentRequest.class));
+        paymentRequest = paymentRequestService.save(paymentRequest);
+        PccResponse pccResponse = new PccResponse(pccRequestDto, paymentRequest);
         pccResponseService.save(pccResponse);
         PccResponseDto pccResponseDto = new PccResponseDto(pccResponse);
         if (verifyCardInformation(regularUserAccount.getBankCard(), pccRequestDto.getCardInfo())) {

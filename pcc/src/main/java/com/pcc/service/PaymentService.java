@@ -34,7 +34,6 @@ public class PaymentService {
                 return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
             }
             transactionService.update(transaction, bankResponseDto);
-//            restTemplate.postForEntity(pccRequestDto.getMerchantBankUrl(), bankResponseDto, BankResponseDto.class);
             return new ResponseEntity<>(bankResponseDto, HttpStatus.OK);
         }
     }
