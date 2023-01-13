@@ -35,6 +35,9 @@ public class PaymentRequest {
     private Timestamp merchantTimestamp;
 
     @Column
+    private Boolean isBankCardPayment;
+
+    @Column
     private String successUrl;
 
     @Column

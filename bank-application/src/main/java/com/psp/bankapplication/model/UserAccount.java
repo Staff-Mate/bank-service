@@ -20,6 +20,9 @@ public abstract class UserAccount {
     private String surname;
 
     @Column
+    private String account;
+
+    @Column
     private Double reservedAssets;
 
     @Column
@@ -66,5 +69,13 @@ public abstract class UserAccount {
 
     public void setAvailableAssets(Double availableAssets) {
         this.availableAssets = availableAssets;
+    }
+
+    public String getAccount() {
+        return account;
+    }
+
+    public void setAccount(String account) {
+        this.account = account;
     }
 }

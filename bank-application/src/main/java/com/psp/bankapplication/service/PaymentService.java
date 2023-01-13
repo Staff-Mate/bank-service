@@ -31,7 +31,11 @@ public class PaymentService {
             log.debug("Payment request accepted. Payment request id: {}, payment id: {}, merchant id: {}",
                     paymentRequest.getId(), paymentRequest.getPaymentId(), paymentRequest.getMerchantId());
 
-            return new ResponseEntity<>("http://localhost:4000/payment/" + paymentRequest.getPaymentId(), HttpStatus.ACCEPTED);
+            String path = "/card/";
+            if(!paymentRequestDto.getIsBankCardPayment()){
+                path = "/qr/";
+            }
+            return new ResponseEntity<>("http://localhost:4000/payment" + path + paymentRequest.getPaymentId(), HttpStatus.ACCEPTED);
         }
         log.error("Payment request rejected - merchant credentials invalid. Merchant id: {} ", paymentRequestDto.getMerchantId());
         return new ResponseEntity<>(paymentRequestDto.getErrorUrl(), HttpStatus.BAD_REQUEST);

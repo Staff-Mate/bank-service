@@ -46,7 +46,8 @@ public class RegularUserAccountService {
     @Autowired
     private ModelMapper modelMapper;
 
-    private final String RECEIVE_PAYMENT_RESPONSE_URL = "http://localhost:9000/bank-card-service/payments/";
+    private final String RECEIVE_CARD_PAYMENT_RESPONSE_URL = "http://localhost:9000/bank-card-service/payments/";
+    private final String RECEIVE_QR_PAYMENT_RESPONSE_URL = "http://localhost:9000/qr-code-service/payments/";
     private final String BANK_ERROR_URL = "http://localhost:8080/payment/error";
 
     private final String PCC_URL = "http://localhost:8090/payments/";
@@ -54,10 +55,12 @@ public class RegularUserAccountService {
 
     public ResponseEntity<?> processPayment(BankCardDto bankCardDto) {
         PaymentRequest paymentRequest = paymentRequestService.getPaymentRequestByPaymentId(bankCardDto.getPaymentId());
+
         if (paymentRequest == null) {
             log.error("Payment request for payment with id {} does not exist.", bankCardDto.getPaymentId());
             return new ResponseEntity<>(BANK_ERROR_URL, HttpStatus.BAD_REQUEST);
         } else {
+            String path = getRequestPath(paymentRequest);
             if (bankCardDto.getPan().substring(0, 6).equals(bankService.getBankCode())) {
                 return reserveUserAssets(bankCardDto, paymentRequest);
             } else {
@@ -75,7 +78,7 @@ public class RegularUserAccountService {
                     transactionService.saveTransaction(bankCardDto, paymentRequest, TransactionStatus.ERROR);
                     PaymentResponseDto paymentResponseDto = new PaymentResponseDto(paymentResponse, TransactionStatus.ERROR);
 
-                    restTemplate.postForEntity(RECEIVE_PAYMENT_RESPONSE_URL, paymentResponseDto, String.class);
+                    restTemplate.postForEntity(path, paymentResponseDto, String.class);
                     return new ResponseEntity<>(paymentRequest.getErrorUrl(), HttpStatus.OK);
                 }else{
                     TransactionStatus transactionStatus = TransactionStatus.valueOf(pccResponseDto.getTransactionStatus());
@@ -91,12 +94,20 @@ public class RegularUserAccountService {
                     }
 
                     PaymentResponseDto paymentResponseDto = new PaymentResponseDto(paymentResponse, transactionStatus);
-                    restTemplate.postForEntity(RECEIVE_PAYMENT_RESPONSE_URL, paymentResponseDto, String.class);
+                    restTemplate.postForEntity(path, paymentResponseDto, String.class);
 
                     return new ResponseEntity<>(url, HttpStatus.OK);
                 }
             }
         }
+    }
+
+    private String getRequestPath(PaymentRequest paymentRequest) {
+        String path = RECEIVE_QR_PAYMENT_RESPONSE_URL;
+        if(paymentRequest.getIsBankCardPayment()){
+            path = RECEIVE_CARD_PAYMENT_RESPONSE_URL;
+        }
+        return path;
     }
 
     public ResponseEntity<?> processPCCPayment(PccRequestDto pccRequestDto) {
@@ -127,6 +138,7 @@ public class RegularUserAccountService {
 
     private ResponseEntity<?> reserveUserAssets(BankCardDto bankCardDto, PaymentRequest paymentRequest) {
         RegularUserAccount regularUserAccount = findRegularUserAccountByPan(bankCardDto.getPan());
+        String path = getRequestPath(paymentRequest);
         if (regularUserAccount == null) {
             log.error("Regular user account does not exist. Invalid bank card pan");
             return new ResponseEntity<>(BANK_ERROR_URL, HttpStatus.BAD_REQUEST);
@@ -141,7 +153,7 @@ public class RegularUserAccountService {
 
 
             PaymentResponseDto paymentResponseDto = new PaymentResponseDto(paymentResponse, transactionStatus);
-            ResponseEntity<String> responseUrl = restTemplate.postForEntity(RECEIVE_PAYMENT_RESPONSE_URL, paymentResponseDto, String.class);
+            ResponseEntity<String> responseUrl = restTemplate.postForEntity(path, paymentResponseDto, String.class);
             log.debug("Payment successfully processed. Resulting url given as a response from bank card service: {}", responseUrl);
 
             return new ResponseEntity<>(responseUrl, HttpStatus.CREATED);
@@ -149,7 +161,7 @@ public class RegularUserAccountService {
             TransactionStatus transactionStatus = TransactionStatus.ERROR;
             transactionService.saveTransaction(bankCardDto, paymentRequest, transactionStatus);
             PaymentResponseDto paymentResponseDto = new PaymentResponseDto(paymentResponse, transactionStatus);
-            ResponseEntity<String> responseUrl = restTemplate.postForEntity(RECEIVE_PAYMENT_RESPONSE_URL, paymentResponseDto, String.class);
+            ResponseEntity<String> responseUrl = restTemplate.postForEntity(path, paymentResponseDto, String.class);
             log.debug("Error during payment process. Invalid bank card information for user with id: {}", regularUserAccount.getId());
             return new ResponseEntity<>(responseUrl, HttpStatus.BAD_REQUEST);
         }
