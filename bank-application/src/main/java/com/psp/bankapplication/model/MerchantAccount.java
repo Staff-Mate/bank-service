@@ -17,4 +17,7 @@ public class MerchantAccount extends UserAccount {
 
     @Column
     private String merchantPassword;
+
+    @Column
+    private String companyName;
 }
