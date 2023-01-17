@@ -26,6 +26,7 @@ public class PaymentService {
         if (accountService.doesMerchantExist(paymentRequestDto.getMerchantId(), paymentRequestDto.getMerchantPassword())) {
             PaymentRequest paymentRequest = modelMapper.map(paymentRequestDto, PaymentRequest.class);
             paymentRequest.setPaymentId(String.format("%.0f", (Math.floor(Math.random() * 9_000_000_000L) + 1_000_000_000L)));
+            paymentRequest.setProcessed(false);
 
             paymentRequestService.save(paymentRequest);
             log.debug("Payment request accepted. Payment request id: {}, payment id: {}, merchant id: {}",

@@ -48,7 +48,7 @@ public class RegularUserAccountService {
 
     private final String RECEIVE_CARD_PAYMENT_RESPONSE_URL = "http://localhost:9000/bank-card-service/payments/";
     private final String RECEIVE_QR_PAYMENT_RESPONSE_URL = "http://localhost:9000/qr-code-service/payments/";
-    private final String BANK_ERROR_URL = "http://localhost:8080/payment/error";
+    private final String BANK_ERROR_URL = "http://localhost:8080/error";
 
     private final String PCC_URL = "http://localhost:8090/payments/";
 
@@ -60,6 +60,12 @@ public class RegularUserAccountService {
             log.error("Payment request for payment with id {} does not exist.", bankCardDto.getPaymentId());
             return new ResponseEntity<>(BANK_ERROR_URL, HttpStatus.BAD_REQUEST);
         } else {
+
+            if(paymentRequest.getProcessed()){
+                log.error("Payment request for payment with id {} is already processed.", bankCardDto.getPaymentId());
+                return new ResponseEntity<>(BANK_ERROR_URL, HttpStatus.BAD_REQUEST);
+            }
+
             String path = getRequestPath(paymentRequest);
             if (bankCardDto.getPan().substring(0, 6).equals(bankService.getBankCode())) {
                 return reserveUserAssets(bankCardDto, paymentRequest);
@@ -96,6 +102,8 @@ public class RegularUserAccountService {
                     PaymentResponseDto paymentResponseDto = new PaymentResponseDto(paymentResponse, transactionStatus);
                     restTemplate.postForEntity(path, paymentResponseDto, String.class);
 
+                    paymentRequest.setProcessed(true);
+                    paymentRequestService.save(paymentRequest);
                     return new ResponseEntity<>(url, HttpStatus.OK);
                 }
             }
@@ -156,6 +164,8 @@ public class RegularUserAccountService {
             ResponseEntity<String> responseUrl = restTemplate.postForEntity(path, paymentResponseDto, String.class);
             log.debug("Payment successfully processed. Resulting url given as a response from bank card service: {}", responseUrl);
 
+            paymentRequest.setProcessed(true);
+            paymentRequestService.save(paymentRequest);
             return new ResponseEntity<>(responseUrl, HttpStatus.CREATED);
         } else {
             TransactionStatus transactionStatus = TransactionStatus.ERROR;
@@ -163,6 +173,10 @@ public class RegularUserAccountService {
             PaymentResponseDto paymentResponseDto = new PaymentResponseDto(paymentResponse, transactionStatus);
             ResponseEntity<String> responseUrl = restTemplate.postForEntity(path, paymentResponseDto, String.class);
             log.debug("Error during payment process. Invalid bank card information for user with id: {}", regularUserAccount.getId());
+
+
+            paymentRequest.setProcessed(true);
+            paymentRequestService.save(paymentRequest);
             return new ResponseEntity<>(responseUrl, HttpStatus.BAD_REQUEST);
         }
     }

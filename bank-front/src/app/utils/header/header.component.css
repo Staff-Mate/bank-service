@@ -1,0 +1,28 @@
+header {
+  justify-content: space-between;
+  padding: 0 30px 40px 30px;
+  background: transparent;
+}
+
+header .menu-full .left img {
+  width: 250px;
+}
+header .menu-full, header .menu-full .left {
+  display: flex;
+  align-items: center;
+}
+
+header .menu-full {
+  width: 100%;
+  justify-content: space-between;
+}
+
+@media screen and (max-width: 1280px) and (min-width: 1024px) {
+  header {
+    padding: 40px;
+  }
+
+  header .menu-full .left img {
+    width: 200px;
+  }
+}

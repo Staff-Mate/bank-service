@@ -16,13 +16,6 @@
     margin: 8px 0;
   }
 
-  button {
-      height: 30px;
-      width: 60px;
-      margin: 0 16px;
-      border-radius: 10px;
-    }
-
   p {
     margin: 0;
   }
@@ -53,11 +46,11 @@
 
   .content {
     display: flex;
-    margin: 82px auto 32px;
-    padding: 0 16px;
-    max-width: 960px;
+    margin: 104px auto 30px auto;
+    max-width: 800px;
     flex-direction: column;
-    align-items: center;
+    align-items: stretch;
+    gap: 12px;
   }
 
 

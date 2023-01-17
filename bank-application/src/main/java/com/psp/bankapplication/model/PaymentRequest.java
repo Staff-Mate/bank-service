@@ -46,5 +46,8 @@ public class PaymentRequest {
     @Column
     private String errorUrl;
 
+    @Column
+    private Boolean processed;
+
 }
 
