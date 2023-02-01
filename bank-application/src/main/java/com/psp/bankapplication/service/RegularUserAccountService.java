@@ -122,7 +122,8 @@ public class RegularUserAccountService {
         PaymentRequest paymentRequest = modelMapper.map(pccRequestDto.getPaymentRequest(), PaymentRequest.class);
         RegularUserAccount regularUserAccount = findRegularUserAccountByPan(pccRequestDto.getCardInfo().getPan());
         if (regularUserAccount == null) {
-            log.error("Regular user account does not exist. Invalid bank card pan");
+            log.error("Regular user account does not exist. Invalid bank card pan. Merchant order id: {}",
+                    pccRequestDto.getPaymentRequest().getMerchantOrderId());
             return new ResponseEntity<>(BANK_ERROR_URL, HttpStatus.BAD_REQUEST);
         }
 
@@ -148,7 +149,8 @@ public class RegularUserAccountService {
         RegularUserAccount regularUserAccount = findRegularUserAccountByPan(bankCardDto.getPan());
         String path = getRequestPath(paymentRequest);
         if (regularUserAccount == null) {
-            log.error("Regular user account does not exist. Invalid bank card pan");
+            log.error("Regular user account does not exist. Invalid bank card pan. Merchant order id: {}",
+                    paymentRequest.getMerchantOrderId());
             return new ResponseEntity<>(BANK_ERROR_URL, HttpStatus.BAD_REQUEST);
         }
 
