@@ -9,4 +9,4 @@ VALUES ('1fba8a11-f059-4bb3-aa6b-891518865012', 'John', 'Doe', '550-123456789123
 
 INSERT INTO merchant_account (id, name, surname, account, reserved_assets, available_assets, merchant_id,
                               merchant_password, company_name)
-VALUES ('1fba8a11-f059-4bb3-aa6b-891518865013', 'Jane', 'Smith', '550-1234567894321-12', 0, 10000, 'id', 'secret', 'StaffMate');
+VALUES ('1fba8a11-f059-4bb3-aa6b-891518865013', 'Jane', 'Smith', '550-1234567894321-12', 0, 10000, 'id', '$2a$10$RRmMpZg1KJMygzA6JJCDCuUYm9KM8onr3ikePOw8XdHa4VETBvrtm', 'StaffMate');

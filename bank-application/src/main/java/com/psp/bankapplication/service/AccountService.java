@@ -5,6 +5,7 @@ import com.psp.bankapplication.repository.MerchantAccountRepository;
 import com.psp.bankapplication.repository.RegularUserAccountRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -15,7 +16,7 @@ public class AccountService {
     private MerchantAccountRepository merchantAccountRepository;
 
     @Autowired
-    private RegularUserAccountRepository regularUserAccountRepository;
+    private PasswordEncoder passwordEncoder;
 
     public Boolean doesMerchantExist(String merchantId, String merchantPassword) {
         MerchantAccount merchantAccount = merchantAccountRepository.findByMerchantId(merchantId);
@@ -23,6 +24,6 @@ public class AccountService {
             log.warn("Merchant with id: {} does not exist!", merchantId);
             return false;
         }
-        return merchantAccount.getMerchantPassword().equals(merchantPassword); //TODO: encryption?
+        return passwordEncoder.matches(merchantPassword, merchantAccount.getMerchantPassword());
     }
 }
