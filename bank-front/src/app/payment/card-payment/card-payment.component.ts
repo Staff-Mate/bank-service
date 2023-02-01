@@ -21,7 +21,9 @@ export class CardPaymentComponent {
         window.location.href = response.body;
       },
       error: err =>{
-        window.location.href = err.error;
+        // console.log(err)
+
+        window.location.href = err.error.text;
       }
     })
   }
