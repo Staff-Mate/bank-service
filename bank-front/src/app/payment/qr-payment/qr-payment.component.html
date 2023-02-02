@@ -9,7 +9,7 @@
     </svg>
   </div>
 
-  <img [src]="'http://localhost:9000/qr-code-service/qr-codes/' + id">
+  <img [src]="'http://'+ '192.168.43.124' +':9000/qr-code-service/qr-codes/' + id">
   <button mat-stroked-button color="primary" (click)="onButton()">Proceed to payment</button>
 </div>
 

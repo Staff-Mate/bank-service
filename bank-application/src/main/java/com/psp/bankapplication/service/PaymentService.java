@@ -5,6 +5,7 @@ import com.psp.bankapplication.model.PaymentRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -22,6 +23,9 @@ public class PaymentService {
     @Autowired
     private PaymentRequestService paymentRequestService;
 
+    @Value("${service.host}")
+    private String host;
+
     public ResponseEntity<?> acceptPaymentRequest(PaymentRequestDto paymentRequestDto) {
         if (accountService.doesMerchantExist(paymentRequestDto.getMerchantId(), paymentRequestDto.getMerchantPassword())) {
             PaymentRequest paymentRequest = modelMapper.map(paymentRequestDto, PaymentRequest.class);
@@ -36,7 +40,7 @@ public class PaymentService {
             if(!paymentRequestDto.getIsBankCardPayment()){
                 path = "/qr/";
             }
-            return new ResponseEntity<>("http://localhost:4000/payment" + path + paymentRequest.getPaymentId(), HttpStatus.ACCEPTED);
+            return new ResponseEntity<>("http://"+ host + ":4000/payment" + path + paymentRequest.getPaymentId(), HttpStatus.ACCEPTED);
         }
         log.error("Payment request rejected - merchant credentials invalid. Merchant id: {} ", paymentRequestDto.getMerchantId());
         return new ResponseEntity<>(paymentRequestDto.getErrorUrl(), HttpStatus.BAD_REQUEST);

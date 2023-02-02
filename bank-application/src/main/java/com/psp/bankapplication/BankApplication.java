@@ -1,6 +1,7 @@
 package com.psp.bankapplication;
 
 import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
@@ -24,12 +25,14 @@ public class BankApplication {
         return new RestTemplate();
     }
 
+    @Value("${service.host}")
+    private String host;
     @Bean
     public WebMvcConfigurer corsConfigurer() {
         return new WebMvcConfigurer() {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
-                registry.addMapping("/**").allowedOrigins("http://localhost:4000");
+                registry.addMapping("/**").allowedOrigins("http://localhost:4000","http://" +host+ ":4000");
             }
         };
     }
